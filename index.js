@@ -1,41 +1,35 @@
 const express = require('express');
-const publicRouter = require('./publicRouter')
-const adminRouter = require('./adminRouter')
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const todoController = require('./controllers/todoController')
+const authController = require('./controllers/authController')
 
-const app = express();
+// express app initailazation
+const app = express()
+dotenv.config()
+app.use(express.json()) 
 
+// mongoose connection 
+mongoose.connect('mongodb://localhost/todos')
+    .then(() => console.log('Database is connnect'))
+    .catch(err => console.log(err))
 
-app.use('/', publicRouter)
-app.use('/admin', adminRouter)
+// app routes
+app.use('/todo', todoController)
+app.use('/auth', authController)
 
-// const loggerWrapper = (options) => {
-//     return function (req, res, next) {
-//         if (options.log) {
-//             console.log(`${new Date(Date.now()).toLocaleString()} - ${req.method} - ${req.originalUrl} - ${req.protocol}- ${req.ip}`);
-//             next()
-//         } else {
-//             throw new Error('Failed to log')
-//         }
-//     }
-// }
+// default error handler
+const errorHanlder = (err, req, res, next) => {
+    if (res.headersSent) {
+        return next(err)
+    }
 
+    res.status(500).json({error: err})
+}
 
-// admin.use(loggerWrapper({log: true}))
+app.use(errorHanlder)
 
-// // app.use(logger)
-// admin.use('/admin', adminRouter)
-
-// app.get('/about', (req, res) => {
-//     res.send('About')
-// })
-
-// const errorMiddleware = (err, req, res, next) => {
-//     console.log(err.message);
-//     res.status(500).send("There was a server side error!")
-// }
-
-// adminRouter.use(errorMiddleware)
-
+// server
 app.listen(3000, ()=> {
-    console.log(`listening on port 3000`);
+    console.log(`Sever started listen port 3000`);
 })
